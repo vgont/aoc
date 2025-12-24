@@ -1,4 +1,4 @@
-#include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,10 +7,10 @@
 #define UPPER 65536
 
 FILE *fptr;
-const char *INPUT_FILE = "input.txt";
 
-char *getInput() {
-  if ((fptr = fopen(INPUT_FILE, "r")) == NULL) {
+char *getInput(char *input_file) {
+  if ((fptr = fopen(input_file, "r")) == NULL) {
+    printf("ERROR: opening file %s\n", input_file);
     perror("fopen");
     exit(1);
   };
@@ -44,16 +44,16 @@ char *getInput() {
   return string;
 }
 
-int validateID(int id) {
+int validateID(long long id) {
   char *s_id = malloc(LOWER);
-  sprintf(s_id, "%d", id);
+  sprintf(s_id, "%lld", id);
   int idlen = strlen(s_id);
   if (idlen == 1 || idlen % 2 != 0) {
-    return 0;
+    return 1;
   };
 
   if (s_id[0] == '0') {
-    return 1;
+    return 0;
   };
   int digits_qtd = idlen / 2;
   char *first_half = malloc(digits_qtd + 1);
@@ -76,23 +76,28 @@ int validateID(int id) {
   if (atoi(first_half) == atoi(second_half)) {
     free(first_half);
     free(second_half);
-    return 1;
+    return 0;
   };
-  return 0;
+  return 1;
 }
 
-void makeRangeArray(int init, int end, int *arr) {
-  int total = end - init + 1;
-  int curr = init;
-  for (int i = 0; arr[total - 1] != end; i++) {
+void makeRangeArray(long long init, long long end, long long *arr) {
+  long long total = end - init + 1;
+  long long curr = init;
+  for (long long i = 0; arr[total - 1] != end; i++) {
     arr[i] = curr;
     curr += 1;
   };
 }
 
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    printf("Usage: %s <input_file>\n", argv[0]);
+    return EXIT_FAILURE;
+  };
 
-int main() {
-  char *input = getInput();
+  char *input_file = argv[1];
+  char *input = getInput(input_file);
   size_t increase = LOWER;
   size_t allocated = increase;
   char *init = malloc(allocated);
@@ -100,9 +105,9 @@ int main() {
 
   char *current = init;
   size_t index = 0;
-  int curr_index = 0;
-  int total_sum = 0;
-  while (0 == 0) {
+  long long curr_index = 0;
+  long long total_sum = 0;
+  while (1) {
     char curr_c = input[index];
     if (index >= allocated) {
       if (increase >= UPPER)
@@ -123,16 +128,15 @@ int main() {
     } else if (curr_c == ',' || curr_c == '\0') {
       end = strcpy(end, current);
       curr_index = 0;
-      int i_init = atoi(init);
-      int i_end = atoi(end);
-      printf("init: %d\tend: %d\n", i_init, i_end);
-      int total = i_end - i_init + 1;
-      int range[total];
+      long long i_init = atol(init);
+      long long i_end = atol(end);
+      printf("init: %lld\tend: %lld\n", i_init, i_end);
+      long long total = i_end - i_init + 1;
+      long long range[total];
 
       makeRangeArray(i_init, i_end, range);
-      for (int i = 0; i + 1 < total; i++) {
-        int result = validateID(range[i]);
-        if (result != 0) {
+      for (long long i = 0; i < total; i++) {
+        if (!validateID(range[i])) {
           total_sum += range[i];
         };
       };
@@ -154,7 +158,7 @@ int main() {
     index += 1;
   }
 
-  printf("total sum: %d\n", total_sum);
+  printf("total sum: %lld\n", total_sum);
 
   return 0;
 }
